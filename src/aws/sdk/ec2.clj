@@ -10,11 +10,13 @@
            com.amazonaws.auth.BasicAWSCredentials
            com.amazonaws.services.ec2.AmazonEC2Client
            com.amazonaws.AmazonServiceException
+           com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest
            com.amazonaws.services.ec2.model.BlockDeviceMapping
            com.amazonaws.services.ec2.model.InstanceBlockDeviceMapping
            com.amazonaws.services.ec2.model.EbsInstanceBlockDevice
            com.amazonaws.services.ec2.model.CreateImageRequest
            com.amazonaws.services.ec2.model.CreateTagsRequest
+           com.amazonaws.services.ec2.model.CreateSecurityGroupRequest
            com.amazonaws.services.ec2.model.DeleteTagsRequest
            com.amazonaws.services.ec2.model.DeregisterImageRequest
            com.amazonaws.services.ec2.model.DescribeImagesRequest 
@@ -30,6 +32,7 @@
            com.amazonaws.services.ec2.model.InstanceNetworkInterfaceSpecification
            com.amazonaws.services.ec2.model.InstanceState
            com.amazonaws.services.ec2.model.InstanceStateChange
+           com.amazonaws.services.ec2.model.IpPermission
            com.amazonaws.services.ec2.model.Placement
            com.amazonaws.services.ec2.model.PrivateIpAddressSpecification
            com.amazonaws.services.ec2.model.ProductCode
@@ -501,3 +504,46 @@
   (ec2/deregister-image cred \"ami-9465dbfd\")"
   [cred image-id]
   (.deregisterImage (ec2-client cred) (DeregisterImageRequest. image-id)))
+
+
+
+
+
+
+(comment
+;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT 
+
+  (def cred {:access-key "AKIAJVLD2WPYY52GWE6Q", :secret-key "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"})
+  (def client (ec2-client cred))
+
+
+  (.createSecurityGroup client )
+
+
+
+;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT 
+)
+
+
+;;
+;; security groups
+;;
+
+(defn create-security-group
+  "Create a security group"
+  [cred params]     
+  (.getGroupId (.createSecurityGroup (ec2-client cred) ((mapper-> CreateSecurityGroupRequest) params))))
+
+
+(defn create-security-group-ip-permission
+  ""
+  [params]
+  ((mapper-> IpPermission) params))
+
+
+;; (authorize-security-group-ingress cred {:group-id "sg-bc4cbad7" :})
+
+(defn authorize-security-group-ingress 
+  "Authorize ingress for a security group"
+  [cred params]
+  (.authorizeSecurityGroupIngress (ec2-client cred) ((mapper-> AuthorizeSecurityGroupIngressRequest) params)))
