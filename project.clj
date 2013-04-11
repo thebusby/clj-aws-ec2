@@ -1,6 +1,6 @@
-(defproject clj-aws-ec2 "0.2.1"
+(defproject clj-aws-ec2 "0.2.2"
   :description "Clojure Amazon EC2 library."
-  :url "https://github.com/mrowe/clj-aws-ec2"
+  :url "https://github.com/thebusby/clj-aws-ec2"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.2.1"]

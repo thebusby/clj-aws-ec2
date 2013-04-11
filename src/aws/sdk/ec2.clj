@@ -42,7 +42,8 @@
            com.amazonaws.services.ec2.model.StopInstancesRequest
            com.amazonaws.services.ec2.model.TerminateInstancesRequest
            com.amazonaws.services.ec2.model.Tag
-           com.amazonaws.services.ec2.model.TagDescription)
+           com.amazonaws.services.ec2.model.TagDescription
+           com.amazonaws.services.ec2.model.UserIdGroupPair)
 
   (:require [clojure.string :as string]))
 
@@ -507,43 +508,79 @@
 
 
 
-
-
-
-(comment
-;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT 
-
-  (def cred {:access-key "AKIAJVLD2WPYY52GWE6Q", :secret-key "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"})
-  (def client (ec2-client cred))
-
-
-  (.createSecurityGroup client )
-
-
-
-;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT ;; COMMENT 
-)
-
-
 ;;
 ;; security groups
 ;;
 
 (defn create-security-group
-  "Create a security group"
+  "Create a new AWS EC2 security group, and return the new group id.
+  params is a map containing the group name and description, and any other optional parameters.
+
+  E.g.:
+
+  (create-security-group cred { :group-name \"GroupName\"
+                                :description \"Description of group here\"})
+
+  See
+  http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/CreateSecurityGroupRequest.html
+  for a complete list of available parameters."
   [cred params]     
   (.getGroupId (.createSecurityGroup (ec2-client cred) ((mapper-> CreateSecurityGroupRequest) params))))
 
+(defn authorize-security-group-ingress 
+  "Authorize ingress for a specified security group with create-security-group-ip-permission.
+   Nil is returned on success.
+
+  E.g.:
+
+  (authorize-security-group-ingress cred { :group-id sg-abcdefgh
+                                           :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
+                                                                                                    :from-port 22
+                                                                                                    :to-port 22 
+                                                                                                    :ip-ranges [\"0.0.0.0/0\"]})]})
+  (authorize-security-group-ingress cred { :group-id sg-abcdefgh
+                                           :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
+                                                                                                    :from-port 0
+                                                                                                    :to-port 65535
+                                                                                                    :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-abcdefgh\"}) ]})]})
+
+  See
+  http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/AuthorizeSecurityGroupIngressRequest.html
+  for a complete list of available parameters."
+  [cred params]
+  (.authorizeSecurityGroupIngress (ec2-client cred) ((mapper-> AuthorizeSecurityGroupIngressRequest) params)))
 
 (defn create-security-group-ip-permission
-  ""
+  "Create IP permissions for a security group. 
+   To be used with authorize-security-group-ingress
+
+  E.g.:
+
+  (create-security-group-ip-permission { :ip-protocol \"tcp\"
+                                         :from-port 22
+                                         :to-port 22 
+                                         :ip-ranges [\"0.0.0.0/0\"]})
+  (create-security-group-ip-permission { :ip-protocol \"tcp\"
+                                         :from-port 22
+                                         :to-port 22 
+                                         :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-abcdefgh\"}) ]})
+
+  See
+  http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/IpPermission.html
+  for a complete list of available parameters."
   [params]
   ((mapper-> IpPermission) params))
 
+(defn create-user-group-pair 
+  "Create a user-group pair for use with security-group-ip-permission.
 
-;; (authorize-security-group-ingress cred {:group-id "sg-bc4cbad7" :})
+  E.g.:
+  (create-user-group-pair { :group-id \"group-id\" })
+  (create-user-group-pair { :group-name \"group-name\" })
+  (create-user-group-pair { :user-id \"user-id\" })
 
-(defn authorize-security-group-ingress 
-  "Authorize ingress for a security group"
-  [cred params]
-  (.authorizeSecurityGroupIngress (ec2-client cred) ((mapper-> AuthorizeSecurityGroupIngressRequest) params)))
+  See
+  http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/UserIdGroupPair.html
+  for a complete list of available parameters."
+  [params]
+  ((mapper-> UserIdGroupPair) params))
