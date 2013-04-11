@@ -15,8 +15,10 @@
            com.amazonaws.services.ec2.model.InstanceBlockDeviceMapping
            com.amazonaws.services.ec2.model.EbsInstanceBlockDevice
            com.amazonaws.services.ec2.model.CreateImageRequest
+           com.amazonaws.services.ec2.model.CreateKeyPairRequest
            com.amazonaws.services.ec2.model.CreateTagsRequest
            com.amazonaws.services.ec2.model.CreateSecurityGroupRequest
+           com.amazonaws.services.ec2.model.DeleteKeyPairRequest
            com.amazonaws.services.ec2.model.DeleteSecurityGroupRequest
            com.amazonaws.services.ec2.model.DeleteTagsRequest
            com.amazonaws.services.ec2.model.DeregisterImageRequest
@@ -35,6 +37,7 @@
            com.amazonaws.services.ec2.model.InstanceState
            com.amazonaws.services.ec2.model.InstanceStateChange
            com.amazonaws.services.ec2.model.IpPermission
+           com.amazonaws.services.ec2.model.KeyPair
            com.amazonaws.services.ec2.model.Placement
            com.amazonaws.services.ec2.model.PrivateIpAddressSpecification
            com.amazonaws.services.ec2.model.ProductCode
@@ -640,3 +643,35 @@
   (create-user-group-pair { :user-id \"user-id\" })"
   [params]
   ((mapper-> UserIdGroupPair) params))
+
+
+
+;;
+;; key pairs
+;; 
+
+(defn create-key-pair
+  "Create a new EC2 key pair with the name provided, and return a map
+   containing details for the new key pair. 
+   Including the unencrypted PEM encoded RSA private key.
+   
+   E.g.:
+   (create-key-pair cred {:key-name \"MyNewKeyName\"})"
+  [cred params]
+  (to-map (.getKeyPair (.createKeyPair (ec2-client cred) ((mapper-> CreateKeyPairRequest) params)))))
+
+(extend-protocol Mappable
+  KeyPair
+  (to-map [kp]
+    {:key-fingerprint (.getKeyFingerprint kp)
+     :key-material    (.getKeyMaterial kp)
+     :key-name        (.getKeyName kp)}))
+
+(defn delete-key-pair
+  "Delete EC2 key pair specified by name.
+  Nil is returned on success.
+
+  E.g.:
+  (delete-key-pair cred {:key-name \"KeyName\"})"
+  [cred params]
+  (.deleteKeyPair (ec2-client cred) ((mapper-> DeleteKeyPairRequest) params)))
