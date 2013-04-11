@@ -22,6 +22,7 @@
            com.amazonaws.services.ec2.model.DeregisterImageRequest
            com.amazonaws.services.ec2.model.DescribeImagesRequest 
            com.amazonaws.services.ec2.model.DescribeInstancesRequest
+           com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult
            com.amazonaws.services.ec2.model.DescribeTagsRequest
            com.amazonaws.services.ec2.model.EbsBlockDevice
            com.amazonaws.services.ec2.model.Filter
@@ -38,7 +39,9 @@
            com.amazonaws.services.ec2.model.PrivateIpAddressSpecification
            com.amazonaws.services.ec2.model.ProductCode
            com.amazonaws.services.ec2.model.Reservation
+           com.amazonaws.services.ec2.model.RevokeSecurityGroupIngressRequest
            com.amazonaws.services.ec2.model.RunInstancesRequest
+           com.amazonaws.services.ec2.model.SecurityGroup
            com.amazonaws.services.ec2.model.StartInstancesRequest
            com.amazonaws.services.ec2.model.StopInstancesRequest
            com.amazonaws.services.ec2.model.TerminateInstancesRequest
@@ -524,6 +527,40 @@
   [cred params]     
   (.getGroupId (.createSecurityGroup (ec2-client cred) ((mapper-> CreateSecurityGroupRequest) params))))
 
+(extend-protocol Mappable
+  SecurityGroup
+  (to-map [sg]
+    {:description           (.getDescription sg)
+     :group-id              (.getGroupId sg)
+     :group-name            (.getGroupName sg)            
+     :ip-permissions        (map to-map (.getIpPermissions sg))
+     :ip-permissions-egress (map to-map (.getIpPermissionsEgress sg))
+     :owner-id              (.getOwnerId sg)
+     :tags                  (reduce merge (map to-map (.getTags sg)))
+     :vpc-id                (.getVpcId sg)})
+
+  IpPermission
+  (to-map [ip-perm]
+    {:from-port           (.getFromPort ip-perm)  
+     :ip-protocol         (.getIpProtocol ip-perm)  
+     :ip-ranges           (seq (.getIpRanges ip-perm))  
+     :to-port             (.getToPort ip-perm)  
+     :user-id-group-pairs (map to-map (.getUserIdGroupPairs ip-perm))})
+
+  UserIdGroupPair
+  (to-map [ugp]
+    {:group-id   (.getGroupId ugp)
+     :group-name (.getGroupName ugp)
+     :user-id    (.getUserId ugp)}))
+
+(defn describe-security-groups
+  "List all the EC2 security group for the supplied credentials, applying the optional filter if supplied.
+   Returns a list of maps, each containing the contents of a security group."
+ ([cred] 
+    (map to-map (.getSecurityGroups (.describeSecurityGroups (ec2-client cred)))))
+ ([cred filter] 
+    (map to-map (.getSecurityGroups (.describeSecurityGroups (ec2-client cred) filter)))))
+
 (defn delete-security-group
   "Deletes security group from the specified Amazon EC2. E.g.:
 
@@ -531,7 +568,6 @@
   (delete-security-group cred { :group-name \"GroupName\" })"
   [cred params]
   (.deleteSecurityGroup (ec2-client cred) ((mapper-> DeleteSecurityGroupRequest) params)))
-
 
 (defn authorize-security-group-ingress 
   "Authorize ingress for a specified security group with create-security-group-ip-permission.
@@ -556,6 +592,24 @@
   [cred params]
   (.authorizeSecurityGroupIngress (ec2-client cred) ((mapper-> AuthorizeSecurityGroupIngressRequest) params)))
 
+(defn revoke-security-group-ingress
+  "Revoke ingress for a specified security group with create-security-group-ip-permission.
+   Nil is returned on success.
+
+  E.g.:
+
+  (revoke-security-group-ingress cred { :group-name \"test group\" 
+                                        :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
+                                                                                                 :from-port 22
+                                                                                                 :to-port 22
+                                                                                                 :user-id-group-pairs [ (create-user-group-pair { :group-id \"sg-abcdefgh\"})]}) ]})
+
+  See
+  http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/RevokeSecurityGroupIngressRequest.html
+  for a complete list of available parameters."
+  [cred params]
+  (.revokeSecurityGroupIngress (ec2-client cred) ((mapper-> RevokeSecurityGroupIngressRequest) params)))
+
 (defn create-security-group-ip-permission
   "Create IP permissions for a security group. 
    To be used with authorize-security-group-ingress
@@ -567,8 +621,8 @@
                                          :to-port 22 
                                          :ip-ranges [\"0.0.0.0/0\"]})
   (create-security-group-ip-permission { :ip-protocol \"tcp\"
-                                         :from-port 22
-                                         :to-port 22 
+                                         :from-port 0
+                                         :to-port 65535 
                                          :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-abcdefgh\"}) ]})
 
   See
