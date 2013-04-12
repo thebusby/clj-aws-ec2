@@ -24,6 +24,7 @@
            com.amazonaws.services.ec2.model.DeregisterImageRequest
            com.amazonaws.services.ec2.model.DescribeImagesRequest 
            com.amazonaws.services.ec2.model.DescribeInstancesRequest
+           com.amazonaws.services.ec2.model.DescribeKeyPairsRequest
            com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult
            com.amazonaws.services.ec2.model.DescribeTagsRequest
            com.amazonaws.services.ec2.model.EbsBlockDevice
@@ -38,6 +39,7 @@
            com.amazonaws.services.ec2.model.InstanceStateChange
            com.amazonaws.services.ec2.model.IpPermission
            com.amazonaws.services.ec2.model.KeyPair
+           com.amazonaws.services.ec2.model.KeyPairInfo
            com.amazonaws.services.ec2.model.Placement
            com.amazonaws.services.ec2.model.PrivateIpAddressSpecification
            com.amazonaws.services.ec2.model.ProductCode
@@ -665,13 +667,27 @@
   (to-map [kp]
     {:key-fingerprint (.getKeyFingerprint kp)
      :key-material    (.getKeyMaterial kp)
-     :key-name        (.getKeyName kp)}))
+     :key-name        (.getKeyName kp)})
+
+  KeyPairInfo
+  (to-map [kpi]
+    {:key-fingerprint (.getKeyFingerprint kpi)
+     :key-name        (.getKeyName kpi)}))
 
 (defn delete-key-pair
   "Delete EC2 key pair specified by name.
   Nil is returned on success.
 
   E.g.:
-  (delete-key-pair cred {:key-name \"KeyName\"})"
+  (delete-key-pair cred \"KeyName\")"
   [cred key-name]
   (.deleteKeyPair (ec2-client cred) (DeleteKeyPairRequest. key-name)))
+
+(defn describe-key-pairs
+  "List all the EC2 key pairs for the supplied credentials.
+  Returns a list of maps, each containing the contents of the key pair.
+
+  E.g.:
+  (describe-key-pairs cred)"
+  [cred] 
+    (map to-map (.getKeyPairs (.describeKeyPairs (ec2-client cred)))))
