@@ -656,9 +656,9 @@
    Including the unencrypted PEM encoded RSA private key.
    
    E.g.:
-   (create-key-pair cred {:key-name \"MyNewKeyName\"})"
-  [cred params]
-  (to-map (.getKeyPair (.createKeyPair (ec2-client cred) ((mapper-> CreateKeyPairRequest) params)))))
+   (create-key-pair cred \"MyNewKeyName\")"
+  [cred key-name]
+  (to-map (.getKeyPair (.createKeyPair (ec2-client cred) (CreateKeyPairRequest. key-name)))))
 
 (extend-protocol Mappable
   KeyPair
@@ -673,5 +673,5 @@
 
   E.g.:
   (delete-key-pair cred {:key-name \"KeyName\"})"
-  [cred params]
-  (.deleteKeyPair (ec2-client cred) ((mapper-> DeleteKeyPairRequest) params)))
+  [cred key-name]
+  (.deleteKeyPair (ec2-client cred) (DeleteKeyPairRequest. key-name)))
