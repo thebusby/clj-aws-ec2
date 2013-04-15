@@ -560,7 +560,11 @@
 
 (defn describe-security-groups
   "List all the EC2 security group for the supplied credentials, applying the optional filter if supplied.
-   Returns a list of maps, each containing the contents of a security group."
+   Returns a list of maps, each containing the contents of a security group.
+
+  E.g.:
+  (describe-security-groups cred)
+  (describe-security-groups cred filter)"
  ([cred] 
     (map to-map (.getSecurityGroups (.describeSecurityGroups (ec2-client cred)))))
  ([cred filter] 
