@@ -569,7 +569,7 @@
 (defn delete-security-group
   "Deletes security group from the specified Amazon EC2. E.g.:
 
-  (delete-security-group cred { :group-id   \"sg-abcdefgh\" })
+  (delete-security-group cred { :group-id   \"sg-9465dbfd\" })
   (delete-security-group cred { :group-name \"GroupName\" })"
   [cred params]
   (.deleteSecurityGroup (ec2-client cred) ((mapper-> DeleteSecurityGroupRequest) params)))
@@ -580,16 +580,16 @@
 
   E.g.:
 
-  (authorize-security-group-ingress cred { :group-id \"sg-abcdefgh\"
+  (authorize-security-group-ingress cred { :group-id \"sg-9465dbfd\"
                                            :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
                                                                                                     :from-port 22
                                                                                                     :to-port 22 
                                                                                                     :ip-ranges [\"0.0.0.0/0\"]})]})
-  (authorize-security-group-ingress cred { :group-id \"sg-abcdefgh\"
+  (authorize-security-group-ingress cred { :group-id \"sg-9465dbfd\"
                                            :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
                                                                                                     :from-port 0
                                                                                                     :to-port 65535
-                                                                                                    :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-abcdefgh\"}) ]})]})
+                                                                                                    :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-9465dbfd\"}) ]})]})
 
   See
   http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/AuthorizeSecurityGroupIngressRequest.html
@@ -607,7 +607,7 @@
                                         :ip-permissions [ (create-security-group-ip-permission { :ip-protocol \"tcp\"
                                                                                                  :from-port 22
                                                                                                  :to-port 22
-                                                                                                 :user-id-group-pairs [ (create-user-group-pair { :group-id \"sg-abcdefgh\"})]}) ]})
+                                                                                                 :user-id-group-pairs [ (create-user-group-pair { :group-id \"sg-9465dbfd\"})]}) ]})
 
   See
   http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/RevokeSecurityGroupIngressRequest.html
@@ -628,7 +628,7 @@
   (create-security-group-ip-permission { :ip-protocol \"tcp\"
                                          :from-port 0
                                          :to-port 65535 
-                                         :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-abcdefgh\"}) ]})
+                                         :user-id-group-pairs [ (create-user-group-pair {:group-id \"sg-9465dbfd\"}) ]})
 
   See
   http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/IpPermission.html
@@ -640,7 +640,7 @@
   "Create a user-group pair for use with security-group-ip-permission.
 
   E.g.:
-  (create-user-group-pair { :group-id \"group-id\" })
+  (create-user-group-pair { :group-id \"sg-9465dbfd\" })
   (create-user-group-pair { :group-name \"group-name\" })
   (create-user-group-pair { :user-id \"user-id\" })"
   [params]
@@ -658,7 +658,12 @@
    Including the unencrypted PEM encoded RSA private key.
    
    E.g.:
-   (create-key-pair cred \"MyNewKeyName\")"
+   (create-key-pair cred \"keypair-name\")
+
+   Structure returned will appear like:
+    {:key-name \"key-name\",
+     :key-fingerprint \"30:d8:34:64:1b:92:35:07:b7:16:58:92:e6:88:ac:55:e8:eb:d8:1c\",
+     :key-material \"-----BEGIN RSA PRIVATE KEY-----\nMIIE ... A8Fvalde/4e\n-----END RSA PRIVATE KEY-----\"}"
   [cred key-name]
   (to-map (.getKeyPair (.createKeyPair (ec2-client cred) (CreateKeyPairRequest. key-name)))))
 
@@ -679,7 +684,7 @@
   Nil is returned on success.
 
   E.g.:
-  (delete-key-pair cred \"KeyName\")"
+  (delete-key-pair cred \"keypair-name\")"
   [cred key-name]
   (.deleteKeyPair (ec2-client cred) (DeleteKeyPairRequest. key-name)))
 
@@ -688,6 +693,11 @@
   Returns a list of maps, each containing the contents of the key pair.
 
   E.g.:
-  (describe-key-pairs cred)"
+  (describe-key-pairs cred)
+
+  Structure returned will appear like:
+   ({:key-name \"keypair-name\",
+     :key-fingerprint \"6e:ca:65:e4:d1:e4:34:d1:ba:00:da:68:b6:5a:9f:79:dc:ea:0d:09\"}
+    ..."
   [cred] 
     (map to-map (.getKeyPairs (.describeKeyPairs (ec2-client cred)))))
