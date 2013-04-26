@@ -60,10 +60,12 @@
 (defn- ec2-client*
   "Create an AmazonEC2Client instance from a map of credentials."
   [cred]
-  (let [client (AmazonEC2Client.
-                (BasicAWSCredentials.
-                 (:access-key cred)
-                 (:secret-key cred)))]
+  (let [client (if (and (:access-key cred) (:secret-key cred))
+                 (AmazonEC2Client.
+                  (BasicAWSCredentials.
+                   (:access-key cred)
+                   (:secret-key cred)))
+                 (AmazonEC2Client.))]
     (if (:endpoint cred) (.setEndpoint client (:endpoint cred)))
     client))
 
@@ -369,7 +371,7 @@
   [key]
   (let [mappers
         {
-         :iam-instance-profile  (fn [iam-instance-profile]  ((mapper-> IamInstanceProfileSpecification) iam-instance-profile))
+         :iam-instance-profile  (fn [iam-instance-profile]  ((mapper-> IamInstanceProfileSpecification) (select-keys iam-instance-profile [:arn :name])))
          :license               (fn [license]               ((mapper-> InstanceLicenseSpecification) license))
          :placement             (fn [placement]             ((mapper-> Placement) placement))
          :ebs                   (fn [ebs]                   ((mapper-> EbsBlockDevice) ebs))
